@@ -403,8 +403,14 @@
       }).catch(() => {});
       return;
     }
-    // VIA 等不支持一键安装的浏览器：给出明确引导
-    toast("请点浏览器右上角「⋯」菜单 →「添加到主屏幕」，即可装到桌面当 App 用（图标先不用管）");
+    // 浏览器不支持一键安装 / 未触发安装事件：弹出带二维码的指引浮层
+    openInstallHelp();
+  }
+  function openInstallHelp() {
+    const ov = document.getElementById("installHelp");
+    const qr = document.getElementById("ihQr");
+    if (qr && !qr.getAttribute("src")) qr.setAttribute("src", "./icons/app-qr.png");
+    if (ov) ov.hidden = false;
   }
   window.addEventListener("appinstalled", () => {
     const b = document.getElementById("installBtn"); if (b) b.hidden = true;
@@ -420,6 +426,8 @@
     const ih = document.getElementById("installHintBtn");
     if (ib) ib.addEventListener("click", doInstall);
     if (ih) ih.addEventListener("click", doInstall);
+    const ihc = document.getElementById("installHelpClose");
+    if (ihc) ihc.addEventListener("click", () => { const ov = document.getElementById("installHelp"); if (ov) ov.hidden = true; });
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
