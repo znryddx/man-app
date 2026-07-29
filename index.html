@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#F6F3EC" />
+  <title>这男人有点东西</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.cn" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@500;600&family=Noto+Sans+SC:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="30" height="30">
+            <rect x="3" y="3" width="26" height="26" rx="8" fill="none" stroke="#2E3A4E" stroke-width="2"/>
+            <circle cx="16" cy="16" r="4.2" fill="#3A4A3F"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">这男人有点东西</div>
+          <div class="brand-sub">每日东方美学工作台</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="statusbar" id="statusbar"></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title-block">
+          <h1 class="h1" id="pageTitle">今日总览</h1>
+          <div class="sub" id="topsub"></div>
+        </div>
+        <div class="topbar-actions">
+          <div class="searchbox">
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+              <circle cx="9" cy="9" r="6" fill="none" stroke="#9A9183" stroke-width="1.6"/>
+              <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="#9A9183" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <span>搜索今日灵感</span>
+          </div>
+          <button class="gen-btn" id="genBtn">
+            <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+              <path d="M10 3v14M3 10h14" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            一键生成今日内容
+          </button>
+        </div>
+      </header>
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
