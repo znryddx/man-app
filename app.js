@@ -382,10 +382,44 @@
     if (cur) setActive(cur);
   }, { passive: true });
 
+  // ---------- 安装到桌面（PWA） ----------
+  let deferredInstall = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstall = e;
+    const b = document.getElementById("installBtn");
+    const h = document.getElementById("installHint");
+    if (b) b.hidden = false;        // 支持 PWA 一键安装则显示醒目按钮
+    if (h) h.style.display = "none"; // 同时隐藏兜底提示
+  });
+  function doInstall() {
+    if (deferredInstall) {
+      deferredInstall.prompt();
+      deferredInstall.userChoice.then((r) => {
+        if (r.outcome === "accepted") toast("已安装到桌面 ✓");
+        deferredInstall = null;
+        const b = document.getElementById("installBtn");
+        if (b) b.hidden = true;
+      }).catch(() => {});
+      return;
+    }
+    // VIA 等不支持一键安装的浏览器：给出明确引导
+    toast("此浏览器暂不支持一键安装：请点浏览器右上菜单「添加到主屏幕」；或改用 Chrome 打开本页即可安装");
+  }
+  window.addEventListener("appinstalled", () => {
+    const b = document.getElementById("installBtn"); if (b) b.hidden = true;
+    const h = document.getElementById("installHint"); if (h) h.style.display = "none";
+    toast("已安装到桌面 ✓");
+  });
+
   document.addEventListener("DOMContentLoaded", () => {
     loadLiveThenRender();
     const gb = document.getElementById("genBtn");
     if (gb) gb.addEventListener("click", () => toast("已为你生成今日内容（演示）"));
+    const ib = document.getElementById("installBtn");
+    const ih = document.getElementById("installHintBtn");
+    if (ib) ib.addEventListener("click", doInstall);
+    if (ih) ih.addEventListener("click", doInstall);
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
