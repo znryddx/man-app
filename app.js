@@ -403,7 +403,16 @@
       }).catch(() => {});
       return;
     }
-    // 浏览器不支持一键安装 / 未触发安装事件：弹出带二维码的指引浮层
+    // 浏览器不支持一键安装：直接下载 APK 安装包 + 弹出安装说明
+    try {
+      const a = document.createElement("a");
+      a.href = "./app.apk";
+      a.download = "app.apk";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast("安装包下载中…下载完成后点击安装");
+    } catch (_) {}
     openInstallHelp();
   }
   function openInstallHelp() {
