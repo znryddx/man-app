@@ -229,26 +229,34 @@ html, body {
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ---------- Responsive (phone) ---------- */
+/* 手机端保持经典双栏：左侧固定导航 + 右侧滚动内容，不折成顶部导航 */
 @media (max-width: 880px) {
-  .app { flex-direction: column; }
+  .app { flex-direction: row; }
   .sidebar {
-    width: 100%; flex: none; height: auto; position: static;
-    flex-direction: column; padding: 16px; gap: 12px;
-    border-right: none; border-bottom: 1px solid var(--hair);
+    width: 132px; flex: 0 0 132px; height: 100vh;
+    position: sticky; top: 0;
+    padding: 16px 10px; gap: 14px;
+    border-right: 1px solid var(--hair); border-bottom: none;
   }
-  .nav { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .brand { justify-content: center; }
+  .brand-text { display: none; }
+  .nav { flex-direction: column; gap: 3px; overflow-y: auto; }
   .nav-group-label { display: none; }
-  .nav-item { white-space: nowrap; padding: 8px 14px; background: var(--card); border: 1px solid var(--hair); }
+  .nav-item { white-space: nowrap; padding: 9px 8px; font-size: 12px; gap: 6px; }
   .nav-item .dot { display: none; }
   .statusbar { display: none; }
-  .brand { justify-content: flex-start; }
-  .topbar { padding: 14px 18px; flex-wrap: wrap; }
+  .install-hint { margin-top: 10px; padding: 10px; }
+  .install-hint-btn { font-size: 11px; padding: 9px 6px; }
+  .install-hint-tip { display: none; }
+  .topbar { padding: 12px 14px; flex-wrap: wrap; }
   .searchbox { display: none; }
-  .content { padding: 22px 18px 56px; gap: 28px; }
+  .gen-btn { display: none; }
+  .install-btn { padding: 8px 12px; font-size: 12px; }
+  .content { padding: 20px 14px 48px; gap: 26px; }
   .hl-grid, .row-2, .cols-2 { grid-template-columns: 1fr; }
-  .hero { padding: 28px 22px; }
-  .hero-quote { font-size: 21px; }
-  .card { padding: 22px; }
+  .hero { padding: 26px 20px; }
+  .hero-quote { font-size: 20px; }
+  .card { padding: 20px; }
 }
 
 /* 安装指引浮层 */
