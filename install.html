@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>这男人有点东西 · 安装</title>
+<style>
+  :root{ --bg:#F6F3EC; --card:#fff; --line:#E8E4DB; --ink:#1F1B16; --sub:#6B6358; --dai:#2E3A4E; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Noto Sans SC",-apple-system,system-ui,sans-serif;min-height:100vh;display:flex;justify-content:center;padding:34px 20px;}
+  .wrap{width:100%;max-width:480px;}
+  .tag{display:inline-block;font-size:12px;letter-spacing:.2em;color:var(--dai);border:1px solid var(--dai);border-radius:999px;padding:4px 12px;}
+  h1{font-family:"Noto Serif SC",serif;font-size:30px;margin:18px 0 6px;font-weight:600;}
+  .desc{color:var(--sub);font-size:14px;line-height:1.75;margin-bottom:28px;}
+  .btn{display:block;width:100%;text-align:center;background:var(--dai);color:#fff;text-decoration:none;font-size:17px;padding:16px;border-radius:12px;font-family:"Noto Serif SC",serif;letter-spacing:.05em;}
+  .meta{margin-top:10px;text-align:center;color:var(--sub);font-size:12px;line-height:1.6;}
+  .steps{margin-top:36px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 20px;}
+  .steps h2{font-family:"Noto Serif SC",serif;font-size:16px;margin-bottom:16px;color:var(--ink);}
+  .steps ol{list-style:none;counter-reset:s;}
+  .steps li{counter-increment:s;position:relative;padding-left:36px;margin-bottom:16px;font-size:14px;line-height:1.7;color:var(--ink);}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:24px;height:24px;background:var(--dai);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .steps li b{color:var(--dai);}
+  .note{margin-top:16px;font-size:12px;color:var(--sub);line-height:1.7;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="tag">ANDROID APP</span>
+    <h1>这男人有点东西</h1>
+    <p class="desc">东方美学 · 拍卖 · 文创 · 线香，每日灵感。下面是安卓安装包，点一下下载，装好就是 App。</p>
+    <a class="btn" href="app.apk" download>下载安装包</a>
+    <p class="meta">安装包约 1MB · 任何安卓手机（真我 / 小米 / 华为 / 摩托罗拉 / OPPO / vivo 等）均可安装</p>
+    <div class="steps">
+      <h2>装好只需三步</h2>
+      <ol>
+        <li>点上方「下载安装包」，把 <b>app.apk</b> 下载到手机。</li>
+        <li>下载完，从屏幕顶部<b>通知栏点 app.apk</b>，或去「文件管理 → 下载」里点它。</li>
+        <li>点「安装」。若提示<b>「禁止安装未知来源应用」</b>：点「设置」→ 允许「此来源」→ 返回继续安装。装完桌面出现「有点东西」图标，点开即用。</li>
+      </ol>
+      <p class="note">装好后每天早上自动更新内容，无需重装、无需再用浏览器。</p>
+    </div>
+  </div>
+</body>
+</html>
