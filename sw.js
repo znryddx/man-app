@@ -1,4 +1,4 @@
-const CACHE = 'man-v2';
+const CACHE = 'man-v3';
 const SHELL = [
   './',
   './index.html',
