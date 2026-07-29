@@ -432,6 +432,14 @@
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
     }
+
+    // 打开页面即弹出安装指引（同一次访问只弹一次），免去用户自己找菜单
+    try {
+      if (!sessionStorage.getItem("installHelpShown")) {
+        sessionStorage.setItem("installHelpShown", "1");
+        setTimeout(openInstallHelp, 1200);
+      }
+    } catch (_) {}
   });
 
   // 打开时优先拉取「当日 AI 生成包」live.json；拿到就用，拿不到（1.5s 超时）退回 120 天池
