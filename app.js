@@ -404,7 +404,7 @@
       return;
     }
     // VIA 等不支持一键安装的浏览器：给出明确引导
-    toast("此浏览器暂不支持一键安装：请点浏览器右上菜单「添加到主屏幕」；或改用 Chrome 打开本页即可安装");
+    toast("请点浏览器右上角「⋯」菜单 →「添加到主屏幕」，即可装到桌面当 App 用（图标先不用管）");
   }
   window.addEventListener("appinstalled", () => {
     const b = document.getElementById("installBtn"); if (b) b.hidden = true;
