@@ -1,4 +1,4 @@
-const CACHE = 'man-v3';
+const CACHE = 'man-v4';
 const SHELL = [
   './',
   './index.html',
@@ -27,36 +27,17 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+// 永远先走网络取最新，避免手机端卡在旧缓存（旧版本曾导致布局/安装入口不对）。
+// 仅当网络失败时才回退缓存，作为离线兜底。
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  const url = new URL(e.request.url);
-  // live.json 必须永远取最新（实时），不缓存
-  if (url.pathname.endsWith('live.json')) {
-    e.respondWith(fetch(e.request, { cache: 'no-store' }).catch(() => caches.match(e.request)));
-    return;
-  }
-  // 页面(HTML)与导航请求：network-first，保证用户永远看到最新版（避免卡在旧缓存看不到新按钮）
-  const isHtml = e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/');
-  if (isHtml) {
-    e.respondWith(
-      fetch(e.request, { cache: 'no-store' })
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
-    return;
-  }
   e.respondWith(
-    caches.match(e.request).then((hit) => {
-      const net = fetch(e.request).then((res) => {
+    fetch(e.request, { cache: 'no-store' })
+      .then((res) => {
         const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
+        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
         return res;
-      }).catch(() => hit);
-      return hit || net;
-    })
+      })
+      .catch(() => caches.match(e.request))
   );
 });
