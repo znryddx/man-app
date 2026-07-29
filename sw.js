@@ -11,7 +11,14 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // 逐个缓存，单个失败不影响整个 worker 安装（避免手机偶发网络抖动导致 PWA 不可安装）
+    for (const url of SHELL) {
+      try { await cache.add(url); } catch (_) {}
+    }
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (e) => {
