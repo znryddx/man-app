@@ -309,6 +309,20 @@
   /* ---------- Mount ---------- */
   function render() {
     if (window.__LIVE && window.__LIVE.quotes && window.__LIVE.quotes.length) D = window.__LIVE;
+    // 防崩保护：任何字段缺失都降级为空值，绝不让单块缺失导致整页崩
+    D = D || {};
+    const _safe = (v, d) => (v == null ? d : v);
+    D.headlines = _safe(D.headlines, []);
+    D.copy = _safe(D.copy, { kicker: "", paragraph: "" });
+    D.tags = _safe(D.tags, []);
+    D.strategy = _safe(D.strategy, []);
+    D.quotes = _safe(D.quotes, []);
+    D.auction = _safe(D.auction, []);
+    D.finance = _safe(D.finance, []);
+    D.trending = _safe(D.trending, []);
+    D.ecom = _safe(D.ecom, []);
+    D.ideas = _safe(D.ideas, []);
+    D.feature = _safe(D.feature, { kicker: "", catName: "", topic: "", angle: "", platform: "" });
     const nav = document.getElementById("nav");
     const content = document.getElementById("content");
     const statusbar = document.getElementById("statusbar");
@@ -460,7 +474,8 @@
       render();
     };
     const to = setTimeout(finish, 1500);
-    fetch("./live.json", { cache: "no-store" })
+    // 缓存击穿：每次带时间戳拉取，绕过 service worker / 浏览器对 live.json 的旧缓存，确保拿到最新修复版
+    fetch("./live.json?v=" + Date.now(), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((j) => {
         if (j && j.quotes && Array.isArray(j.quotes) && j.finance && j.trending) {
