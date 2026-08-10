@@ -275,6 +275,23 @@ def pick_incense(pool):
     idx = (now_cst().date() - base).days % len(pool)
     return pool[idx]
 
+def incense_template(item):
+    """LLM 未产出完整线香方案时的规则兜底：基于品种名+特点生成结构化营销方案（零外部依赖）。"""
+    name = item.get("name", "")
+    note = (item.get("note") or "").strip()
+    kws = [w for w in re.split(r"[，,、/（）()\s]+", note) if w][:3]
+    kws = (kws + ["清润", "静气", "文人意趣"])[:4]
+    scenes = ["独处焚香", "书房阅卷", "茶席佐香", "睡前安眠"]
+    hooks = [
+        f"一炉{name}，把浮躁按在门外。",
+        f"男生也该有自己的味道——{name}，温润不冲。",
+        f"睡前点{name}，比数羊管用。",
+    ]
+    position = (note + "；一炉清烟，半日清闲。") if note else "一炉清烟，半日清闲。"
+    pitch = f"{name}：{note}。气味清润不艳，安神定气，书房茶席独处皆宜，一盒陪你过一整个季节。"
+    timing = "晚9-11点 · 小红书/视频号 助眠与文人生活场景最佳；周末午后适合种草。"
+    return {"name": name, "position": position, "keywords": kws, "scenes": scenes, "hooks": hooks, "pitch": pitch, "timing": timing}
+
 # ---------------------------------------------------------------------------
 # 拍卖模块：优先从热榜拍卖命中，不足则用真实风格占位（不轮播）
 # ---------------------------------------------------------------------------
@@ -367,7 +384,11 @@ def main():
         pool = load_incense_pool()
         incense_item = pick_incense(pool)
         creative = build_creative(prev, trending_text, incense_item)
-        incense = creative.get("incense") or prev.get("incense") or {}
+        incense = creative.get("incense") or {}
+        if incense_item and not incense.get("hooks"):
+            # LLM 未完整产出线香方案，用规则模板兜底（保证字段完整、零外部依赖）
+            incense = incense_template(incense_item)
+        incense = incense or prev.get("incense") or {}
 
     auction = build_auction(prev, news.get("auction", []))
 
