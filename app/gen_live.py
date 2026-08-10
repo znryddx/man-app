@@ -197,12 +197,16 @@ CREATIVE_SYSTEM = (
     "你是东方美学文创 App「这男人有点东西」的内容主编，风格：留白美术馆式的"
     "高级、清爽、克制，带文人意境与生活态度。请严格按用户给出的 JSON Schema 输出，"
     "不要任何多余解释，只输出合法 JSON。"
+    "此外，用户会指定今日一款线香品种，请在同一份 JSON 里额外输出 incense 字段（其营销方案）。"
 )
 
 CREATIVE_USER = '''今天是 {date}。今日真实热点参考（用于让内容沾点当下气息，但不要硬塞新闻进金句）：
 {trending}
 
-请生成以下 8 个创作模块，严格按 JSON 输出：
+今日线香品种（请为它单独产出「每日线香营销方案」，写入 incense 字段）：
+{incense_block}
+
+请生成以下创作模块，严格按 JSON 输出：
 {{
   "quotes": [ {{"text":"美学金句(古句或雅句)","source":"— 作者《书名》 或 录自…","analysis":"一句赏析"}} ]  // 恰好3条，金句只讲器物/审美/心境，绝不掺新闻
   "ecom": [ {{"platform":"淘宝/京东/抖音/小红书/拼多多 之一","desc":"一行电商趋势描述"}} ]  // 恰好5条，每平台一条
@@ -212,15 +216,27 @@ CREATIVE_USER = '''今天是 {date}。今日真实热点参考（用于让内容
   "emojiquotes": ["情绪金句(短句,带情绪张力:小丧/洒脱/自洽/清醒)", ...]  // 恰好6条
   "dailyplay": [ {{"scene":"场景名","text":"60~110字可直接配图的社媒文案"}} ]  // 恰好8条,覆盖:喝酒微醺/深夜宵夜/干饭吃货/闲逛放风/居家百态/打工人发疯/生活翻车/互动提问
   "strategy": ["转化钩子+发布时机+内容节奏 的一段长文"]  // 恰好1条
+  "incense": {{
+     "name": "线香品种名(与给定一致)",
+     "position": "一句话定位(20字内,点出气质与人群)",
+     "keywords": ["风味/气质关键词1","关键词2","关键词3"],
+     "scenes": ["适用场景1","适用场景2","适用场景3","适用场景4"],
+     "hooks": ["可直接发的社媒文案钩子1(带标点,不超24字)","钩子2","钩子3"],
+     "pitch": "一段转化话术(60~110字,讲清为什么买这盒)",
+     "timing": "最佳发布时机与平台建议(一句话)"
+  }}
 }}'''
 
-def build_creative(prev, trending_text):
-    raw = llm(CREATIVE_SYSTEM, CREATIVE_USER.format(date=DATE, trending=trending_text))
+def build_creative(prev, trending_text, incense_item=None):
+    incense_block = "（今日暂无线香品种）"
+    if incense_item:
+        incense_block = f"品种名：{incense_item.get('name','')}；特点：{incense_item.get('note','')}"
+    raw = llm(CREATIVE_SYSTEM, CREATIVE_USER.format(date=DATE, trending=trending_text, incense_block=incense_block), max_tokens=5000)
     data = extract_json(raw)
     if not data:
         print("  [warn] 创作类生成失败，沿用昨日创作模块")
         return {k: prev.get(k) for k in
-                ("quotes", "ecom", "ideas", "feature", "tags", "emojiquotes", "dailyplay", "strategy")}
+                ("quotes", "ecom", "ideas", "feature", "tags", "emojiquotes", "dailyplay", "strategy", "incense")}
     # 数量兜底
     data["quotes"] = (data.get("quotes") or [])[:3] or prev.get("quotes", [])
     data["ecom"] = (data.get("ecom") or [])[:5] or prev.get("ecom", [])
@@ -231,10 +247,15 @@ def build_creative(prev, trending_text):
     data["strategy"] = (data.get("strategy") or [])[:1] or prev.get("strategy", [])
     if not data.get("feature"):
         data["feature"] = prev.get("feature", {})
+    # 线香营销方案兜底
+    inc = data.get("incense") or {}
+    if incense_item and not inc.get("name"):
+        inc["name"] = incense_item.get("name", "")
+    data["incense"] = inc
     return data
 
 # ---------------------------------------------------------------------------
-# 线香每日营销方案：按日期轮取品种池一款，GitHub Models 免费生成
+# 线香品种池：按日期轮取一款（实际营销方案合并进 build_creative 一次 LLM 生成）
 # ---------------------------------------------------------------------------
 def load_incense_pool():
     p = os.path.join(BASE, "incense.json")
@@ -247,38 +268,12 @@ def load_incense_pool():
         print("  [warn] 读 incense.json 失败 ->", e)
     return None
 
-INCENSE_SYSTEM = (
-    "你是东方美学文创 App「这男人有点东西」的线香内容主编。风格：留白美术馆式的高级、清爽、克制，"
-    "带文人意境与生活态度。今天只针对一款指定线香，产出一份可直接用于社媒分发的营销方案。"
-    "严格按用户给出的 JSON Schema 输出，不要任何多余解释，只输出合法 JSON。"
-)
-INCENSE_USER = '''今天要做的线香是：{name}（{note}）
-请为它产出一份「每日线香营销方案」，严格按 JSON 输出：
-{{
-  "name": "线香品种名(与给定一致)",
-  "position": "一句话定位(20字内,点出气质与人群)",
-  "keywords": ["风味/气质关键词1","关键词2","关键词3"],
-  "scenes": ["适用场景1","适用场景2","适用场景3","适用场景4"],
-  "hooks": ["可直接发的社媒文案钩子1(带标点,不超24字)","钩子2","钩子3"],
-  "pitch": "一段转化话术(60~110字,讲清为什么买这盒)",
-  "timing": "最佳发布时机与平台建议(一句话)"
-}}'''
-
-def build_incense(prev, pool):
+def pick_incense(pool):
     if not pool:
-        return prev.get("incense") or {}
+        return None
     base = datetime.date(2026, 8, 10)
     idx = (now_cst().date() - base).days % len(pool)
-    item = pool[idx]
-    name = item.get("name", "")
-    note = item.get("note", "")
-    raw = llm(INCENSE_SYSTEM, INCENSE_USER.format(name=name, note=note))
-    data = extract_json(raw)
-    if not data or not data.get("name"):
-        print("  [warn] 线香生成失败，沿用昨日")
-        return prev.get("incense") or {"name": name}
-    data["name"] = name
-    return data
+    return pool[idx]
 
 # ---------------------------------------------------------------------------
 # 拍卖模块：优先从热榜拍卖命中，不足则用真实风格占位（不轮播）
@@ -362,14 +357,17 @@ def main():
                        {"scene":"打工人发疯场","text":"精神状态良好，但想发疯。"},
                        {"scene":"生活翻车场","text":"今天做饭翻车了，但笑得很开心。"},
                        {"scene":"互动提问场","text":"你今晚微醺还是宵夜？评论区交出来。"}],
-          "strategy":["转化钩子：以『定心之物』切入，承接当下避险与自洽情绪；发布时机：早8通勤、晚9睡前双高峰；内容节奏：日更金句+周主题深更，电商节点前置种草。"]
+          "strategy":["转化钩子：以『定心之物』切入，承接当下避险与自洽情绪；发布时机：早8通勤、晚9睡前双高峰；内容节奏：日更金句+周主题深更，电商节点前置种草。"],
+          "incense":{"name":"老山檀香","position":"温润奶香，安神定气。","keywords":["奶香","温润","宁神"],"scenes":["独处","书房","睡前","茶席"],"hooks":["一炉老山檀，把浮躁按下去。","男生书房该有的味道，温润不冲。","睡前点它，比数羊管用。"],"pitch":"老山檀香气味醇厚带奶韵，安神助眠，书房茶席皆宜。","timing":"晚9-11点 · 小红书/视频号 助眠场景最佳。"}
         }''')
-        incense = {"name":"老山檀香","position":"温润奶香，安神定气。","keywords":["奶香","温润","宁神"],"scenes":["独处","书房","睡前","茶席"],"hooks":["一炉老山檀，把浮躁按下去。","男生书房该有的味道，温润不冲。","睡前点它，比数羊管用。"],"pitch":"老山檀香气味醇厚带奶韵，安神助眠，书房茶席皆宜。","timing":"晚9-11点 · 小红书/视频号 助眠场景最佳。"}
+        incense = creative.get("incense") or {}
     else:
         news = build_news(prev)
         trending_text = "\n".join(news.get("trending", []))
-        creative = build_creative(prev, trending_text)
-        incense = build_incense(prev, load_incense_pool())
+        pool = load_incense_pool()
+        incense_item = pick_incense(pool)
+        creative = build_creative(prev, trending_text, incense_item)
+        incense = creative.get("incense") or prev.get("incense") or {}
 
     auction = build_auction(prev, news.get("auction", []))
 
