@@ -25,7 +25,8 @@
     tags: "爆款话题标签",
     emojiquotes: "情绪金句",
     dailyplay: "日常吃喝玩乐",
-    strategy: "全案营销策略"
+    strategy: "全案营销策略",
+    incense: "每日线香"
   };
 
   const NAV = [
@@ -39,7 +40,8 @@
         { id: "trending", label: "热点新闻" },
         { id: "ecom", label: "文创线香趋势" },
         { id: "ideas", label: "爆款二创灵感" },
-        { id: "feature", label: "主推品类选题" }
+        { id: "feature", label: "主推品类选题" },
+        { id: "incense", label: "每日线香" }
       ]
     },
     {
@@ -280,6 +282,45 @@
     return section("feature", "主推品类 · 今日选题", "FEATURE & TOPIC", card);
   }
 
+  /* ---------- 每日线香（incense） ---------- */
+  function buildIncense() {
+    const inc = D.incense || {};
+    const card = el("div", { class: "card" });
+    if (!inc.name) {
+      card.appendChild(el("div", { class: "note", text: "今日香方准备中，明日上新。" }));
+      return section("incense", "每日线香 · 一款", "INCENSE OF THE DAY", card);
+    }
+    card.appendChild(el("div", { class: "lot", style: "font-size:20px;margin:0", text: inc.name }));
+    if (inc.position) card.appendChild(el("div", { class: "meta", style: "margin:6px 0 14px", text: inc.position }));
+    const gap = () => card.appendChild(el("div", { style: "height:14px" }));
+    if (inc.keywords && inc.keywords.length) {
+      const kw = el("div", { class: "tag-wrap" });
+      inc.keywords.forEach((k) => kw.appendChild(el("div", { class: "tag", text: k })));
+      card.appendChild(kw); gap();
+    }
+    if (inc.scenes && inc.scenes.length) {
+      card.appendChild(el("div", { class: "meta-line", text: "适用场景" }));
+      const sc = el("div", { class: "cols-2" });
+      inc.scenes.forEach((s) => sc.appendChild(el("div", { class: "news-line", text: s })));
+      card.appendChild(sc); gap();
+    }
+    if (inc.hooks && inc.hooks.length) {
+      card.appendChild(el("div", { class: "meta-line", text: "社媒文案钩子" }));
+      inc.hooks.forEach((h) => card.appendChild(el("div", { class: "strat-line", text: h })));
+      gap();
+    }
+    if (inc.pitch) {
+      card.appendChild(el("div", { class: "meta-line", text: "转化话术" }));
+      card.appendChild(el("div", { class: "note", style: "line-height:1.8", text: inc.pitch }));
+      gap();
+    }
+    if (inc.timing) {
+      card.appendChild(el("div", { class: "meta-line", text: "发布时机 · 平台" }));
+      card.appendChild(el("div", { class: "note", text: inc.timing }));
+    }
+    return section("incense", "每日线香 · 一款", "INCENSE OF THE DAY", card);
+  }
+
   /* ---------- 列表型模块（汽车 / 腕表 / 奢侈品） ---------- */
   function buildListSection(id, title, en, items) {
     const wrap = el("div", { class: "cols-2" });
@@ -349,6 +390,7 @@
     content.appendChild(buildEcom());
     content.appendChild(buildIdeas());
     content.appendChild(buildFeature());
+    content.appendChild(buildIncense());
     content.appendChild(buildListSection("auto", "汽车资讯", "AUTO WIRE", D.auto));
     content.appendChild(buildListSection("watch", "腕表资讯", "WATCH WIRE", D.watch));
     content.appendChild(buildListSection("luxury", "奢侈品大牌", "LUXURY WIRE", D.luxury));
