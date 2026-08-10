@@ -234,6 +234,53 @@ def build_creative(prev, trending_text):
     return data
 
 # ---------------------------------------------------------------------------
+# 线香每日营销方案：按日期轮取品种池一款，GitHub Models 免费生成
+# ---------------------------------------------------------------------------
+def load_incense_pool():
+    p = os.path.join(BASE, "incense.json")
+    try:
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return [x for x in data if isinstance(x, dict) and x.get("name")]
+    except Exception as e:
+        print("  [warn] 读 incense.json 失败 ->", e)
+    return None
+
+INCENSE_SYSTEM = (
+    "你是东方美学文创 App「这男人有点东西」的线香内容主编。风格：留白美术馆式的高级、清爽、克制，"
+    "带文人意境与生活态度。今天只针对一款指定线香，产出一份可直接用于社媒分发的营销方案。"
+    "严格按用户给出的 JSON Schema 输出，不要任何多余解释，只输出合法 JSON。"
+)
+INCENSE_USER = '''今天要做的线香是：{name}（{note}）
+请为它产出一份「每日线香营销方案」，严格按 JSON 输出：
+{{
+  "name": "线香品种名(与给定一致)",
+  "position": "一句话定位(20字内,点出气质与人群)",
+  "keywords": ["风味/气质关键词1","关键词2","关键词3"],
+  "scenes": ["适用场景1","适用场景2","适用场景3","适用场景4"],
+  "hooks": ["可直接发的社媒文案钩子1(带标点,不超24字)","钩子2","钩子3"],
+  "pitch": "一段转化话术(60~110字,讲清为什么买这盒)",
+  "timing": "最佳发布时机与平台建议(一句话)"
+}}'''
+
+def build_incense(prev, pool):
+    if not pool:
+        return prev.get("incense") or {}
+    base = datetime.date(2026, 8, 10)
+    idx = (now_cst().date() - base).days % len(pool)
+    item = pool[idx]
+    name = item.get("name", "")
+    note = item.get("note", "")
+    raw = llm(INCENSE_SYSTEM, INCENSE_USER.format(name=name, note=note))
+    data = extract_json(raw)
+    if not data or not data.get("name"):
+        print("  [warn] 线香生成失败，沿用昨日")
+        return prev.get("incense") or {"name": name}
+    data["name"] = name
+    return data
+
+# ---------------------------------------------------------------------------
 # 拍卖模块：优先从热榜拍卖命中，不足则用真实风格占位（不轮播）
 # ---------------------------------------------------------------------------
 def build_auction(prev, auction_news):
@@ -272,6 +319,7 @@ def skeleton():
         "emojiquotes": ["生活不易，微醺解千愁。", "不必合群，自洽就好。", "清醒是种温柔的残忍。"],
         "dailyplay": [{"scene": "喝酒微醺场", "text": "生活不易，微醺解千愁。今晚小酌一杯，敬自己。"}],
         "strategy": ["转化钩子：以『定心之物』切入；发布时机：早8晚9；内容节奏：日更+周主题。"],
+        "incense": {"name": "老山檀香", "position": "温润奶香，安神定气。", "keywords": ["奶香", "温润", "宁神"], "scenes": ["独处", "书房", "睡前", "茶席"], "hooks": ["一炉老山檀，把浮躁按下去。", "男生书房该有的味道，温润不冲。", "睡前点它，比数羊管用。"], "pitch": "老山檀香气味醇厚带奶韵，安神助眠，书房茶席皆宜。", "timing": "晚9-11点 · 小红书/视频号 助眠场景最佳。"},
     }
 
 def main():
@@ -316,10 +364,12 @@ def main():
                        {"scene":"互动提问场","text":"你今晚微醺还是宵夜？评论区交出来。"}],
           "strategy":["转化钩子：以『定心之物』切入，承接当下避险与自洽情绪；发布时机：早8通勤、晚9睡前双高峰；内容节奏：日更金句+周主题深更，电商节点前置种草。"]
         }''')
+        incense = {"name":"老山檀香","position":"温润奶香，安神定气。","keywords":["奶香","温润","宁神"],"scenes":["独处","书房","睡前","茶席"],"hooks":["一炉老山檀，把浮躁按下去。","男生书房该有的味道，温润不冲。","睡前点它，比数羊管用。"],"pitch":"老山檀香气味醇厚带奶韵，安神助眠，书房茶席皆宜。","timing":"晚9-11点 · 小红书/视频号 助眠场景最佳。"}
     else:
         news = build_news(prev)
         trending_text = "\n".join(news.get("trending", []))
         creative = build_creative(prev, trending_text)
+        incense = build_incense(prev, load_incense_pool())
 
     auction = build_auction(prev, news.get("auction", []))
 
@@ -340,11 +390,12 @@ def main():
         "emojiquotes": creative.get("emojiquotes") or prev.get("emojiquotes", []),
         "dailyplay": creative.get("dailyplay") or prev.get("dailyplay", []),
         "strategy": creative.get("strategy") or prev.get("strategy", []),
+        "incense": incense or prev.get("incense", {}),
     }
 
     # 校验：必需模块均非空
     for k in ("quotes", "auction", "finance", "trending", "auto", "watch", "luxury",
-              "ecom", "ideas", "feature", "tags", "emojiquotes", "dailyplay", "strategy"):
+              "ecom", "ideas", "feature", "tags", "emojiquotes", "dailyplay", "strategy", "incense"):
         if not result.get(k):
             print(f"  [warn] 模块 {k} 为空，回退骨架")
             result[k] = skeleton()[k]
