@@ -2,9 +2,12 @@ name: 每日 live.json 生成
 
 on:
   schedule:
-    # 北京时间 08:05 = UTC 00:05
+    # 北京时间 08:05 / 08:20 / 08:35 = UTC 00:05 / 00:20 / 00:35
+    # 三档冗余：GitHub 定时为 best-effort，偶发跳过，多档互备避免整日漏跑
     - cron: '5 0 * * *'
-  workflow_dispatch: {}      # 支持手动触发（首次验证用）
+    - cron: '20 0 * * *'
+    - cron: '35 0 * * *'
+  workflow_dispatch: {}      # 支持手动触发（兜底/首启验证）
 
 permissions:
   contents: write
