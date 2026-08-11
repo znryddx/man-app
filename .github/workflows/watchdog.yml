@@ -1,0 +1,68 @@
+name: 每日 live.json 自愈（兜底看门狗）
+
+# 作用：每天稍晚检查一次，若发现当天 live.json 还没生成（主任务漏跑/失败），自动补生成。
+# 与主任务 daily.yml 互补：主任务三档(08:05/08:20/08:35) + 本看门狗两档(09:00/12:00) = 5 个触发点，整日漏跑概率趋近于零。
+# 全程 GitHub 服务器运行，零电脑零积分。
+
+on:
+  schedule:
+    - cron: '0 1 * * *'      # 北京 09:00
+    - cron: '0 4 * * *'      # 北京 12:00
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  models: read
+
+concurrency:
+  group: daily-watchdog
+  cancel-in-progress: false
+
+jobs:
+  heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 若当日内容缺失则补生成
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_MODEL: ${{ vars.GH_MODEL || 'gpt-4o-mini' }}
+        run: |
+          python - <<'PY'
+          import json, subprocess, datetime, os, sys
+          # 北京日期（UTC+8，中国无夏令时）
+          bj = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+          today = bj.strftime("%Y.%m.%d")
+          try:
+              d = json.load(open("app/live.json", encoding="utf-8"))
+              cur = d.get("date")
+          except Exception:
+              cur = None
+          print("today(北京) =", today, "| live.json.date =", cur)
+          if cur == today:
+              print("当日内容已存在，无需补生成")
+              sys.exit(0)
+          print("检测到当日内容缺失，运行生成器补生成…")
+          r = subprocess.run(["python", "app/gen_live.py"], env=dict(os.environ))
+          if r.returncode != 0:
+              print("生成失败"); sys.exit(1)
+          subprocess.run(["git", "config", "user.name", "github-actions[bot]"])
+          subprocess.run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"])
+          subprocess.run(["git", "add", "app/live.json"])
+          if subprocess.run(["git", "diff", "--cached", "--quiet"]).returncode != 0:
+              subprocess.run(["git", "commit", "-m", "heal: live.json " + today])
+              subprocess.run(["git", "push"])
+              print("PUSHED 补生成完成")
+          else:
+              print("无变化，跳过")
+          PY
