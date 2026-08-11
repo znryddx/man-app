@@ -58,7 +58,8 @@ jobs:
               print("生成失败"); sys.exit(1)
           subprocess.run(["git", "config", "user.name", "github-actions[bot]"])
           subprocess.run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"])
-          subprocess.run(["git", "add", "app/live.json"])
+          subprocess.run(["cp", "app/live.json", "live.json"])
+          subprocess.run(["git", "add", "app/live.json", "live.json"])
           if subprocess.run(["git", "diff", "--cached", "--quiet"]).returncode != 0:
               subprocess.run(["git", "commit", "-m", "heal: live.json " + today])
               subprocess.run(["git", "push"])
